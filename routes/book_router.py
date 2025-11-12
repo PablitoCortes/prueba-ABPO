@@ -15,7 +15,6 @@ def get_books(
     isAvailable: bool = False,
     title: str = ""
 ):
-	# return list (possibly empty)
 	return book_services.get_books(db, page, limit, isAvailable, title)
 
 
@@ -29,7 +28,6 @@ def get_book_by_id(id:int, db:Session = Depends(get_db)):
 
 @router.post("/", response_model=BookOut, status_code=201)
 def create_book(data:CreateBookSchema, db:Session = Depends(get_db)):
-	# Let Pydantic validate required fields; map service errors to HTTP responses
 	try:
 		return book_services.create_book(db, data)
 	except BadRequestError as e:

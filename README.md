@@ -1,200 +1,280 @@
-# Authors & Books API
+# Library Management API
 
-Small FastAPI project using SQLAlchemy and SQLite to manage authors and books.
+API REST para la gestión de una biblioteca, desarrollada con FastAPI. Permite gestionar libros y autores con operaciones CRUD completas.
 
-This README contains clear installation and run instructions for Windows (PowerShell) plus useful tips for development.
+## 📋 Requisitos Previos
 
----
+- Python 3.13 o superior
+- Poetry (gestor de dependencias)
 
-## Requirements
+## 🚀 Instrucciones de Instalación
 
-- Python 3.10+ (recommended)
-- Git (optional)
-
-The project uses these Python libraries (see `requirements.txt`):
-- fastapi
-- uvicorn
-- sqlalchemy
-- pydantic
-
----
-
-## Setup (Windows PowerShell)
-
-Open PowerShell in the project root (where `app.py` is located) and run:
-
-1. Create a virtual environment
-
-```powershell
-python -m venv venv
+1. **Clonar el repositorio** (si aplica):
+```bash
+git clone https://github.com/PablitoCortes/prueba-ABPO.git
+cd "prueba-ABPO"
 ```
 
-2. Activate the virtual environment
+2. **Instalar Poetry** (si no lo tienes instalado):
+```bash
+# Windows (PowerShell)
+(Invoke-WebRequest -Uri https://install.python-poetry.org -UseBasicParsing).Content | python -
 
-```powershell
-# PowerShell
-.\venv\Scripts\Activate.ps1
-# or (legacy)
-# .\venv\Scripts\activate
+# Linux/Mac
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-3. Install dependencies
+3. **Instalar las dependencias del proyecto**:
+```bash
+poetry add fastapi
+poetry add "uvicorn[standard]"
+poetry add sqlalchemy
+poetry add pydantic
+poetry add pytest --group dev
 
-```powershell
-pip install -r requirements.txt
 ```
 
-(If you add new dependencies, update `requirements.txt` with `pip freeze > requirements.txt`.)
-
----
-
-## Run the application (development)
-
-Start the FastAPI app with uvicorn (reload enabled for development):
-
-```powershell
-uvicorn app:app --reload --port 8000
+4. **Activar el entorno virtual**:
+```bash
+poetry shell
 ```
 
-- The application will be available at: http://127.0.0.1:8000
-- Interactive OpenAPI docs: http://127.0.0.1:8000/docs
+O si prefieres usar el entorno virtual directamente:
+```bash
+# Windows
+.\venv\Scripts\activate
 
-Notes:
-- The project uses an SQLite file named `autor.db` at the project root by default.
-- On app startup the code calls the DB initialization function which will create tables if they don't exist.
-
----
-
-## Project structure (important files)
-
-- `app.py` — FastAPI application entry point (includes routers and initializes DB)
-- `db/db.py` — SQLAlchemy engine, SessionLocal, Base and `init_db()` helper
-- `models/` — SQLAlchemy models (`author_model.py`, `book_model.py`)
-- `crud/` — database access functions (create/get/update/delete)
-- `routes/` — FastAPI routers (e.g. `author_router.py`, `book_router.py`)
-- `schemas/` — Pydantic models for request/response validation
-- `requirements.txt` — Python dependencies
-
----
-
-## Database notes
-
-- The project uses SQLite (`autor.db`). By default `init_db()` (called on startup) runs `Base.metadata.create_all(bind=engine)` to create tables.
-- Development workflow:
-  - If you change models and are OK losing dev data, you can delete `autor.db` and restart the app to recreate tables.
-  - To preserve data across schema changes in a controlled way, use Alembic for migrations (recommended for staging/production).
-
-Quick commands (PowerShell):
-
-```powershell
-# backup existing DB
-Copy-Item .\autor.db .\autor.db.bak
-
-# remove DB (will cause tables to be recreated on next app start)
-Remove-Item .\autor.db
+# Linux/Mac
+source venv/bin/activate
 ```
 
----
+5. **Inicializar la base de datos**:
+La base de datos se inicializa automáticamente al ejecutar la aplicación por primera vez. El archivo `db/library.db` se creará automáticamente.
 
-## Minimal API usage examples (PowerShell / curl style)
+## ▶️ Cómo Ejecutar el Proyecto
 
-1) Create an author (POST /autors/)
+1. **Asegúrate de estar en el entorno virtual** (ver paso 4 de instalación)
 
-```powershell
-curl.exe -X POST "http://127.0.0.1:8000/autors/" -H "Content-Type: application/json" -d '{"name":"Gabriel García Márquez","nationality":"Colombian","dob":"1927-03-06"}'
+2. **Ejecutar el servidor**:
+```bash
+python app.py
 ```
 
-Response: 201 Created with the created author JSON (including `id`).
-
-2) Create a book (POST /books/)
-
-- First ensure you have an author (note the id from the previous response, e.g. `1`).
-
-```powershell
-curl.exe -X POST "http://127.0.0.1:8000/books/" -H "Content-Type: application/json" -d '{"title":"One Hundred Years of Solitude","isbn":"9780060883287","author_id":1}'
+O usando uvicorn directamente:
+```bash
+uvicorn app:app --host 0.0.0.0 --port 4000 --reload
 ```
 
-Response: 201 Created with the created book JSON.
+3. **Acceder a la documentación interactiva**:
+Una vez que el servidor esté corriendo, puedes acceder a:
+- **Swagger UI**: http://localhost:4000/docs
+- **ReDoc**: http://localhost:4000/redoc
 
-3) Retrieve books and authors
+El servidor estará disponible en: `http://localhost:4000`
 
-- GET all authors: `GET /autors/`
-- GET author by id: `GET /autors/{id}`
-- GET all books: `GET /books/`
-- GET book by id: `GET /books/{id}`
+## 📚 Ejemplos de Uso de la API
 
-Open the docs for an interactive UI: http://127.0.0.1:8000/docs
+### Autores (Authors)
 
----
-
-## Error handling expectations
-
-The API follows these response semantics:
-
-- 200 OK — successful GET/PUT/DELETE operations
-- 201 Created — successful POST (resource created)
-- 400 Bad Request — client-provided data is invalid (routes may return 422 when Pydantic validation fails)
-- 404 Not Found — requested resource does not exist (e.g. `author_id` not found)
-- 500 Internal Server Error — unhandled exceptions or response validation failures
-
-If you see `ResponseValidationError` in logs, it usually means the `response_model` declared in a route does not match the value returned by the route. Make sure response models have `orm_mode = True` when returning SQLAlchemy objects.
-
----
-
-## Development tips
-
-- Keep request and response Pydantic models separate. Use `CreateXxx` for incoming data and `XxxOut` for responses.
-- Use `orm_mode = True` in response models to allow Pydantic to read SQLAlchemy attributes.
-- Keep `crud/` functions focused on DB operations and avoid returning HTTP responses from the crud layer; return data and let routers convert to responses and status codes.
-
----
-
-## Optional: Using Alembic (migrations)
-
-For non-destructive schema changes (recommended for production):
-
-1. Install alembic in the venv:
-
-```powershell
-pip install alembic
+#### Obtener todos los autores
+```bash
+curl -X GET "http://localhost:4000/authors/" \
+  -H "accept: application/json"
 ```
 
-2. Initialize Alembic (one-time):
-
-```powershell
-alembic init alembic
+#### Obtener un autor por ID
+```bash
+curl -X GET "http://localhost:4000/authors/1" \
+  -H "accept: application/json"
 ```
 
-3. Configure `alembic/env.py` to expose your SQLAlchemy `Base.metadata` (import your models module so mappers are registered), then generate and apply migrations:
-
-```powershell
-alembic revision --autogenerate -m "Describe changes"
-alembic upgrade head
+#### Crear un nuevo autor
+```bash
+curl -X POST "http://localhost:4000/authors/" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"name\": \"Gabriel García Márquez\",
+    \"birth_date\": \"1927-03-06\",
+    \"nationality\": \"Colombiana\"
+  }"
 ```
 
----
+#### Actualizar un autor
+```bash
+curl -X PUT "http://localhost:4000/authors/1" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"name\": \"Gabriel García Márquez\",
+    \"nationality\": \"Colombiana\"
+  }"
+```
 
-## Troubleshooting common issues
+#### Eliminar un autor
+```bash
+curl -X DELETE "http://localhost:4000/authors/1" \
+  -H "accept: application/json"
+```
 
-- ImportError about `Session` from sqlalchemy: import `Session` from `sqlalchemy.orm` (not from `sqlalchemy`).
-- `TypeError: 'author_id' is an invalid keyword argument for Book`: verify the column name in `models/book_model.py` matches the keyword you pass when creating a `Book` instance (`author_id` vs `autor_id`).
-- `sqlite3.OperationalError: table books has no column named author_id`: your DB file was created before the model change — either migrate schema or recreate DB.
-- `ResponseValidationError`: make sure response models match returned objects and enable `orm_mode = True`.
+### Libros (Books)
 
----
+#### Obtener todos los libros (con paginación y filtros)
+```bash
+# Obtener primera página (10 libros por defecto)
+curl -X GET "http://localhost:4000/books/?page=1&limit=10" \
+  -H "accept: application/json"
 
-## Contributing
+# Filtrar solo libros disponibles
+curl -X GET "http://localhost:4000/books/?isAvailable=true" \
+  -H "accept: application/json"
 
-Small project. If you make changes:
-- Run and test endpoints locally.
-- Add or update Pydantic schemas when models change.
-- Consider Alembic migration scripts for schema updates.
+# Buscar libros por título
+curl -X GET "http://localhost:4000/books/?title=Cien" \
+  -H "accept: application/json"
 
----
+# Combinar filtros
+curl -X GET "http://localhost:4000/books/?page=1&limit=5&isAvailable=true&title=cien" \
+  -H "accept: application/json"
+```
 
-If you want, I can also:
-- add a `scripts/reset_db.py` to quickly recreate the database,
-- add an `examples/` folder with tiny test scripts, or
-- create a basic `Makefile` / PowerShell script with common tasks.
+#### Obtener un libro por ID
+```bash
+curl -X GET "http://localhost:4000/books/1" \
+  -H "accept: application/json"
+```
 
-Tell me which of those you'd like next.
+#### Crear un nuevo libro
+```bash
+curl -X POST "http://localhost:4000/books/" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"title\": \"Cien años de soledad\",
+    \"isbn\": \"978-84-376-0494-7\",
+    \"author_id\": 1,
+    \"published_year\": 1967,
+    \"genre\": \"Realismo mágico\",
+    \"isAvailable\": true
+  }"
+```
+
+#### Actualizar un libro
+```bash
+curl -X PUT "http://localhost:4000/books/1" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"title\": \"Cien años de soledad (Edición especial)\",
+    \"isAvailable\": false
+  }"
+```
+
+#### Eliminar un libro
+```bash
+curl -X DELETE "http://localhost:4000/books/1" \
+  -H "accept: application/json"
+```
+
+## 🏗️ Decisiones Técnicas
+
+### Framework: FastAPI
+Se eligió **FastAPI** como framework principal por las siguientes razones:
+- **Alto rendimiento**: Basado en Starlette y Pydantic, comparable a Node.js y Go
+- **Documentación automática**: Genera documentación interactiva (Swagger/OpenAPI) automáticamente
+- **Validación de datos integrada**: Usa Pydantic para validación y serialización automática
+- **Type hints nativos**: Soporte completo para anotaciones de tipo de Python
+- **Async/await**: Soporte nativo para operaciones asíncronas
+
+### Base de Datos: SQLite con SQLAlchemy ORM
+- **SQLite**: Ademas de ser requisito para esta prueba, se ha elegido SQLite por su simplicidad para desarrollo y pruebas. No requiere configuración de servidor, es ligera y suficiente para proyectos de tamaño medio
+- **SQLAlchemy ORM**: Proporciona una capa de abstracción que facilita el mantenimiento del código y permite migrar a otras bases de datos (PostgreSQL, MySQL) en el futuro sin cambios mayores
+
+### Arquitectura en Capas
+Se implementó una arquitectura en capas para separar responsabilidades:
+
+```
+routes/          → Endpoints HTTP, manejo de requests/responses
+services/        → Lógica de negocio y reglas de dominio
+models/          → Modelos de base de datos (SQLAlchemy)
+schemas/         → Esquemas de validación (Pydantic)
+db/              → Configuración de base de datos
+```
+
+**Ventajas**:
+- **Separación de responsabilidades**: Cada capa tiene un propósito claro
+- **Mantenibilidad**: Cambios en una capa no afectan directamente a otras
+- **Testabilidad**: Fácil de testear cada capa de forma independiente
+- **Escalabilidad**: Fácil agregar nuevas funcionalidades sin afectar código existente
+
+### Validación con Pydantic
+- **Schemas separados**: `CreateBookSchema`, `UpdateBookSchema`, `BookOut` para diferentes contextos
+- **Validación automática**: FastAPI valida automáticamente los datos de entrada usando los schemas
+- **Documentación automática**: Los schemas se reflejan automáticamente en la documentación de la API
+
+### Manejo de Excepciones Personalizado
+Se crearon excepciones personalizadas (`NotFoundError`, `BadRequestError`) para:
+- **Consistencia**: Manejo uniforme de errores en toda la aplicación
+- **Claridad**: Mensajes de error más descriptivos y específicos
+- **Mantenibilidad**: Centralizar la lógica de manejo de errores
+
+### Optimización de Queries
+- **joinedload**: Se utiliza `joinedload(Book.author)` para evitar el problema N+1 en las consultas, cargando la relación con el autor en una sola query
+- **Filtros opcionales**: Los endpoints de listado soportan filtros (disponibilidad, título) para reducir la cantidad de datos transferidos
+
+### Gestión de Dependencias: Poetry
+- **Reproducibilidad**: Garantiza que todos los desarrolladores usen las mismas versiones de dependencias
+- **Manejo de entornos**: Facilita la gestión de entornos virtuales
+- **Lock file**: `poetry.lock` asegura instalaciones consistentes
+
+### Paginación
+Los endpoints de listado implementan paginación para:
+- **Rendimiento**: Evitar cargar grandes cantidades de datos de una vez
+- **Experiencia de usuario**: Mejor respuesta en aplicaciones cliente
+- **Escalabilidad**: Preparado para manejar grandes volúmenes de datos
+
+### Configuración del Servidor
+- **Host 0.0.0.0**: Permite acceso desde cualquier interfaz de red
+- **Puerto 4000**: Puerto personalizado para evitar conflictos
+- **Reload automático**: Modo desarrollo con recarga automática al detectar cambios
+
+## 🧪 Testing
+
+El proyecto incluye tests en la carpeta `tests/`. Para ejecutarlos:
+
+```bash
+pytest
+```
+
+## 📝 Estructura del Proyecto
+
+```
+prueba ABPO/
+├── app.py                 # Punto de entrada de la aplicación
+├── db/
+│   └── db.py             # Configuración de base de datos
+├── models/               # Modelos SQLAlchemy
+│   ├── author_model.py
+│   └── book_model.py
+├── routes/               # Endpoints de la API
+│   ├── author_router.py
+│   └── book_router.py
+├── schemas/              # Schemas Pydantic
+│   ├── author_schema.py
+│   └── book_schema.py
+├── services/             # Lógica de negocio
+│   ├── authors/
+│   │   └── author_services.py
+│   ├── books/
+│   │   └── book_services.py
+│   └── exceptions.py
+├── tests/                # Tests
+│   ├── author_tests.py
+│   └── book_tests.py
+└── pyproject.toml        # Configuración de Poetry
+```
+
+## 📄 Licencia
+
+Este proyecto es parte de una prueba técnica.
+

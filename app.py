@@ -6,7 +6,7 @@ from routes.book_router import router as book_router
 
 init_db()
 
-app = FastAPI(title="User Management API")
+app = FastAPI(title="Library Management API")
 
 app.include_router(author_router)
 app.include_router(book_router)
