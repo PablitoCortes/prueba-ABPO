@@ -1,4 +1,5 @@
 from sqlalchemy.orm import Session
+from datetime import datetime
 from models.author_model import Author
 from schemas.author_schema import CreateAuthorSchema, UpdateAuthorSchema
 from services.exceptions import NotFoundError, BadRequestError
@@ -11,7 +12,7 @@ def create_author(db: Session, data: CreateAuthorSchema):
     new_author = Author(
         name=data.name,
         nationality=data.nationality,
-        dob=data.dob)
+        date_of_birth=data.date_of_birth)
 
     db.add(new_author)
     db.commit()
@@ -34,7 +35,7 @@ def update_author(db: Session, id: int, author_data: UpdateAuthorSchema):
 
     for field, value in author_data.model_dump(exclude_unset=True).items():
         setattr(found_author, field, value)
-    found_author.updated_at = date.now()
+    found_author.updated_at = datetime.now()
     db.commit()
     db.refresh(found_author)
     return found_author

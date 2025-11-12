@@ -1,23 +1,8 @@
-from fastapi.testclient import TestClient
-import app
+# Tests antiguos - Reemplazados por test_book_services.py y test_api_endpoints.py
+# Este archivo se mantiene por compatibilidad pero los nuevos tests están en:
+# - tests/test_book_services.py (tests unitarios de servicios)
+# - tests/test_api_endpoints.py (tests de endpoints)
 
-client = TestClient(app)
-
-def test_get_books_empty_list():
-	response = client.get("/books")
-	assert response.status_code == 404 or response.status_code == 200
-	assert isinstance(response.json(),list) or "detail" in response.json()
-
-def test_get_book_by_id():
-	response = client.get("/books/{id}")
-	assert response.status_code == 404 or response.status_code == 200
-	assert isinstance(response.json(),dict) or "detail" in response.json()
-
-def test_get_book_by_title():
-	response = client.get("/books/{title}")
-	assert response.status_code == 404 or response.status_code == 200
-	assert isinstance(response.json(),dict) or "detail" in response.json()
-
-
-
-
+# Para ejecutar los tests:
+# pytest tests/test_book_services.py
+# pytest tests/test_api_endpoints.py

@@ -24,8 +24,8 @@ def create_book(db: Session, data: CreateBookSchema):
 		isbn=data.isbn,
 		author_id=data.author_id,
 		genre=data.genre,
-		published_date=data.published_date,
-		isAvailable=data.isAvailable,
+		published_year=data.published_year,
+		is_available=data.isAvailable,
 	)
 
 	db.add(new_book)
@@ -38,7 +38,7 @@ def get_books(db: Session, page: int = 1, limit: int = 10, isAvailable: bool = F
     query = db.query(Book).options(joinedload(Book.author))
 
     if isAvailable:
-        query = query.filter(Book.isAvailable == True)
+        query = query.filter(Book.is_available == True)
     
     if title:
         query = query.filter(Book.title.ilike(f"%{title}%"))
@@ -60,7 +60,10 @@ def update_book(db: Session, id: int, book_data: UpdateBookSchema):
 			raise NotFoundError("Author not found")
 
 	for field, value in book_data.model_dump(exclude_unset=True).items():
-		setattr(found_book, field, value)
+		if field == "isAvailable":
+			setattr(found_book, "is_available", value)
+		else:
+			setattr(found_book, field, value)
 
 	db.commit()
 	db.refresh(found_book)
