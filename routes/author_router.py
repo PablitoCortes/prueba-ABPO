@@ -1,0 +1,59 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from db.db import get_db
+from services.authors import author_services
+from services.exceptions import NotFoundError, BadRequestError
+from schemas.author_schema import BaseAuthorSchema, CreateAuthorSchema, UpdateAuthorSchema
+
+router = APIRouter(prefix="/authors", tags=["Authors"])
+
+@router.get("/", response_model=list[BaseAuthorSchema])
+def get_authors(db: Session = Depends(get_db)):
+    authors = author_services.get_authors(db)
+    return authors
+
+
+@router.get("/{id}", response_model=BaseAuthorSchema)
+def get_author_by_id(id: int, db: Session = Depends(get_db)):
+    author = author_services.get_author_by_id(db, id)
+    if not author:
+        raise HTTPException(status_code=404, detail="Author not found")
+    return author
+
+
+@router.post("/", response_model=BaseAuthorSchema, status_code=201)
+def create_author(data: CreateAuthorSchema, db: Session = Depends(get_db)):
+    try:
+        return author_services.create_author(db, data)
+    except BadRequestError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.put("/{id}", response_model=BaseAuthorSchema)
+def update_author(id: int, author_data: UpdateAuthorSchema, db: Session = Depends(get_db)):
+    if not author_data:
+        raise HTTPException(status_code=400, detail="No data provided for update")
+    try:
+        updated_author = author_services.update_author(db, id, author_data)
+        return updated_author
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except BadRequestError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.delete("/{id}", status_code=200)
+def delete_author(id: int, db: Session = Depends(get_db)):
+    try:
+        author_services.delete_author(db, id)
+        return {"message": "Author deleted successfully"}
+    except NotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except BadRequestError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Internal server error")
