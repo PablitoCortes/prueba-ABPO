@@ -30,6 +30,9 @@ poetry add fastapi
 poetry add "uvicorn[standard]"
 poetry add sqlalchemy
 poetry add pydantic
+poetry add python-dotenv
+poetry add "python-jose[cryptography]"
+poetry add "passlib[bcrypt]"
 poetry add pytest --group dev
 
 ```
@@ -50,6 +53,15 @@ source venv/bin/activate
 
 5. **Inicializar la base de datos**:
 La base de datos se inicializa automáticamente al ejecutar la aplicación por primera vez. El archivo `db/library.db` se creará automáticamente.
+
+6. **Configurar variables de entorno**:
+Crea un archivo `.env` en la raíz del proyecto con al menos las siguientes variables:
+```bash
+SECRET_KEY="cambia-este-valor-por-uno-seguro"
+ALGORITHM="HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES=30
+```
+Puedes generar un valor seguro para `SECRET_KEY` con `openssl rand -hex 32` o utilizando cualquier generador de cadenas aleatorias.
 
 ## ▶️ Cómo Ejecutar el Proyecto
 
@@ -73,6 +85,38 @@ Una vez que el servidor esté corriendo, puedes acceder a:
 El servidor estará disponible en: `http://localhost:4000`
 
 ## 📚 Ejemplos de Uso de la API
+
+### Autenticación (Users)
+
+#### Registrar un nuevo usuario
+```bash
+curl -X POST "http://localhost:4000/users/register" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"username\": \"usuario_demo\",
+    \"password\": \"SuperSecreto123\"
+  }"
+```
+
+#### Iniciar sesión y obtener token
+```bash
+curl -X POST "http://localhost:4000/users/login" \
+  -H "accept: application/json" \
+  -H "Content-Type: application/json" \
+  -d "{
+    \"username\": \"usuario_demo\",
+    \"password\": \"SuperSecreto123\"
+  }"
+```
+La respuesta devolverá un `access_token`. Guárdalo y envíalo en el header `Authorization` como `Bearer <token>` en cada petición protegida.
+
+#### Consultar perfil autenticado
+```bash
+curl -X GET "http://localhost:4000/users/profile" \
+  -H "accept: application/json" \
+  -H "Authorization: Bearer <token>"
+```
 
 ### Autores (Authors)
 
@@ -237,6 +281,13 @@ Los endpoints de listado implementan paginación para:
 - **Host 0.0.0.0**: Permite acceso desde cualquier interfaz de red
 - **Puerto 4000**: Puerto personalizado para evitar conflictos
 - **Reload automático**: Modo desarrollo con recarga automática al detectar cambios
+
+### Autenticación y Seguridad
+- **OAuth2 con JWT**: Se utiliza `OAuth2PasswordBearer` para extraer el token y `python-jose` para firmarlo/verificarlo (`core/auth.py`)
+- **Tokens configurables**: Duración (`ACCESS_TOKEN_EXPIRE_MINUTES`), algoritmo (`ALGORITHM`) y clave (`SECRET_KEY`) provienen de variables de entorno
+- **Contraseñas hasheadas**: `passlib[bcrypt]` gestiona el hashing y verificación de contraseñas (`core/security.py`)
+- **Usuarios persistidos**: El modelo `User` en `models/user_model.py` almacena credenciales y permite ampliar la lógica de roles o permisos
+- **Protección de rutas**: Los routers `author_router.py` y `book_router.py` usan `Depends(get_current_user)` para exigir autenticación en todas las operaciones CRUD
 
 ## 🧪 Testing
 

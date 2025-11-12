@@ -4,6 +4,7 @@ from db.db import get_db
 from services.books import book_services
 from services.exceptions import NotFoundError, BadRequestError
 from schemas.book_schema import CreateBookSchema, UpdateBookSchema, BookOut
+from core.auth import get_current_user
 
 router = APIRouter(prefix="/books", tags=["Books"])
 
@@ -13,13 +14,18 @@ def get_books(
     page: int = 1,
     limit: int = 10,
     isAvailable: bool = False,
-    title: str = ""
+    title: str = "",
+    current_user=Depends(get_current_user),
 ):
-	return book_services.get_books(db, page, limit, isAvailable, title)
+    return book_services.get_books(db, page, limit, isAvailable, title)
 
 
 @router.get("/{id}", response_model=BookOut)
-def get_book_by_id(id:int, db:Session = Depends(get_db)):
+def get_book_by_id(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
 		book = book_services.get_book_by_id(db, id)
 		if not book:
 				raise HTTPException(status_code=404, detail="Book not found")
@@ -27,7 +33,11 @@ def get_book_by_id(id:int, db:Session = Depends(get_db)):
 
 
 @router.post("/", response_model=BookOut, status_code=201)
-def create_book(data:CreateBookSchema, db:Session = Depends(get_db)):
+def create_book(
+    data: CreateBookSchema,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
 	try:
 		return book_services.create_book(db, data)
 	except BadRequestError as e:
@@ -38,7 +48,12 @@ def create_book(data:CreateBookSchema, db:Session = Depends(get_db)):
 		raise HTTPException(status_code=500, detail="Internal server error")
 		
 @router.put("/{id}", response_model=BookOut)
-def update_book(id:int, book_data:UpdateBookSchema, db:Session = Depends(get_db)):
+def update_book(
+    id: int,
+    book_data: UpdateBookSchema,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
 	if not book_data:
 		raise HTTPException(status_code=400, detail="No data provided for update")
 	try:
@@ -52,7 +67,11 @@ def update_book(id:int, book_data:UpdateBookSchema, db:Session = Depends(get_db)
 		raise HTTPException(status_code=500, detail="Internal server error")
 		
 @router.delete("/{id}", status_code=200)
-def delete_book(id:int, db:Session = Depends(get_db)):
+def delete_book(
+    id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
 	try:
 		book_services.delete_book(db, id)
 		return {"message": "Book deleted successfully"}

@@ -3,7 +3,7 @@ import uvicorn
 from db.db import init_db
 from routes.author_router import router as author_router
 from routes.book_router import router as book_router
-from routes.auth_router import router as auth_router
+from routes.user_router import router as user_router
 
 init_db()
 
@@ -11,7 +11,7 @@ app = FastAPI(title="Library Management API")
 
 app.include_router(author_router)
 app.include_router(book_router)
-app.include_router(auth_router)
+app.include_router(user_router)
 
 def start_server():
 	uvicorn.run(

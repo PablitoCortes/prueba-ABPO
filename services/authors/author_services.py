@@ -34,7 +34,7 @@ def update_author(db: Session, id: int, author_data: UpdateAuthorSchema):
 
     for field, value in author_data.model_dump(exclude_unset=True).items():
         setattr(found_author, field, value)
-
+    found_author.updated_at = date.now()
     db.commit()
     db.refresh(found_author)
     return found_author
