@@ -13,6 +13,8 @@ class Book(Base):
     published_year = Column(Integer, nullable=True)
     genre = Column(String, index=True, nullable=True)
     is_available = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
+    updated_at =Column(DateTime, default=datetime.now(timezone.utc), nullable=False)
 
 
     author_id = Column(Integer, ForeignKey("authors.id"), nullable=False)

@@ -3,17 +3,17 @@ from sqlalchemy.orm import Session
 from db.db import get_db
 from services.authors import author_services
 from services.exceptions import NotFoundError, BadRequestError
-from schemas.author_schema import BaseAuthorSchema, CreateAuthorSchema, UpdateAuthorSchema
+from schemas.author_schema import AuthorOut, CreateAuthorSchema, UpdateAuthorSchema
 
 router = APIRouter(prefix="/authors", tags=["Authors"])
 
-@router.get("/", response_model=list[BaseAuthorSchema])
+@router.get("/", response_model=list[AuthorOut])
 def get_authors(db: Session = Depends(get_db)):
     authors = author_services.get_authors(db)
     return authors
 
 
-@router.get("/{id}", response_model=BaseAuthorSchema)
+@router.get("/{id}", response_model=AuthorOut)
 def get_author_by_id(id: int, db: Session = Depends(get_db)):
     author = author_services.get_author_by_id(db, id)
     if not author:
@@ -21,7 +21,7 @@ def get_author_by_id(id: int, db: Session = Depends(get_db)):
     return author
 
 
-@router.post("/", response_model=BaseAuthorSchema, status_code=201)
+@router.post("/", response_model=AuthorOut, status_code=201)
 def create_author(data: CreateAuthorSchema, db: Session = Depends(get_db)):
     try:
         return author_services.create_author(db, data)
@@ -31,7 +31,7 @@ def create_author(data: CreateAuthorSchema, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
-@router.put("/{id}", response_model=BaseAuthorSchema)
+@router.put("/{id}", response_model=AuthorOut)
 def update_author(id: int, author_data: UpdateAuthorSchema, db: Session = Depends(get_db)):
     if not author_data:
         raise HTTPException(status_code=400, detail="No data provided for update")
