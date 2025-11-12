@@ -10,9 +10,9 @@ class Book(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String, nullable=False)
     isbn = Column(String, index=True, nullable=False, unique=True)
-    published_date = Column(DateTime, default=datetime.now(timezone.utc), nullable=True)
+    published_year = Column(Integer, nullable=True)
     genre = Column(String, index=True, nullable=True)
-    isAvailable = Column(Boolean, default=True, nullable=False)
+    is_available = Column(Boolean, default=True, nullable=False)
 
 
     author_id = Column(Integer, ForeignKey("authors.id"), nullable=False)
