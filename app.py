@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, APIRouter
 import uvicorn
 from db.db import init_db
 from routes.author_router import router as author_router
@@ -9,9 +9,16 @@ init_db()
 
 app = FastAPI(title="Library Management API")
 
-app.include_router(author_router)
-app.include_router(book_router)
-app.include_router(user_router)
+# Router principal con prefijo /api
+api_router = APIRouter(prefix="/api")
+
+# Incluir todos los routers en el router principal
+api_router.include_router(author_router)
+api_router.include_router(book_router)
+api_router.include_router(user_router)
+
+# Incluir el router principal en la app
+app.include_router(api_router)
 
 def start_server():
 	uvicorn.run(
@@ -20,6 +27,7 @@ def start_server():
 		port=4000,
 		log_level="debug",
 		reload=True,
+		
 	)
 
 if __name__ == "__main__":
