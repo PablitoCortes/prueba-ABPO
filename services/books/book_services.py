@@ -54,12 +54,16 @@ def update_book(db: Session, id: int, book_data: UpdateBookSchema):
 	found_book = db.query(Book).filter(Book.id == id).first()
 	if not found_book:
 		raise NotFoundError("Book not found")
-	if book_data.author_id:
-		found_author = db.query(Author).filter(Author.id == book_data.author_id).first()
-		if not found_author:
-			raise NotFoundError("Author not found")
+	
+	update_dict = book_data.model_dump(exclude_unset=True)
+	if "author_id" in update_dict:
+		author_id = update_dict["author_id"]
+		if author_id is not None:
+			found_author = db.query(Author).filter(Author.id == author_id).first()
+			if not found_author:
+				raise NotFoundError("Author not found")
 
-	for field, value in book_data.model_dump(exclude_unset=True).items():
+	for field, value in update_dict.items():
 		if field == "isAvailable":
 			setattr(found_book, "is_available", value)
 		else:

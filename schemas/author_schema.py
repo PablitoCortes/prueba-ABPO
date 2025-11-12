@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import date
+from datetime import datetime
 
 class UpdateAuthorSchema(BaseModel):
 	name: Optional[str] = None
@@ -14,12 +14,11 @@ class CreateAuthorSchema(BaseModel):
 	date_of_birth: Optional[str] = None
 
 class AuthorOut(BaseModel):
+	model_config = {"from_attributes": True}
+	
 	id: int
 	name: str
 	nationality: Optional[str] = None
 	date_of_birth: Optional[str] = None
-	created_at: date
-	updated_at: date
-
-	class Config:
-		orm_mode = True
+	created_at: datetime
+	updated_at: datetime

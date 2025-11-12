@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from datetime import date
+from datetime import datetime
 
 from schemas.author_schema import AuthorOut
 
@@ -27,9 +27,9 @@ class BookOut(BaseModel):
     author: AuthorOut 
     published_year: Optional[int] = None
     genre: Optional[str] = None
-    isAvailable: bool = True
-    created_at: date
-    updated_at: date
+    is_available: bool = True
+    created_at: datetime
+    updated_at: datetime
 	
     class Config:
         orm_mode = True
